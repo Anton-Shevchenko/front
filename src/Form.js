@@ -6,17 +6,26 @@ class Form extends React.Component {
         this.state = {
             firstName: '',
             lastName: '',
-            phones: [],
+            phoneInputs: [{}],
             countInputs: 0
         };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handlePhone = this.handlePhone.bind(this);
         this.add = this.add.bind(this);
     }
 
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
+    }
+
+    handlePhone(event) {
+        let newState = [...this.state.phoneInputs];
+        newState.forEach(function(phone) {
+            phone[event.target.name] = event.target.value
+        });
+        this.setState({phoneInputs: newState});
     }
 
     add() {
@@ -25,23 +34,31 @@ class Form extends React.Component {
         })
     }
 
-    handleSubmit(event) {
+    getData() {
+        let data = {
+            firstName: this.state.firstName,
+            lastName: this.state.lastName,
+            phoneNumbers: this.state.phoneInputs.map(function (phone) {
+                return (Object.values(phone))[0];
+            })
+        };
 
-        console.log('submit', this.state.phones);
+        return data;
+    }
+
+    handleSubmit(event) {
+        console.log('KKKKKKK', this.getData());
         fetch('http://127.0.0.1/v1/employees', {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(this.state)
+            body: JSON.stringify(this.getData())
         })
-            .then(res => res.json())
             .then(
                 (result) => {
                     console.log(result);
                 },
-                // Примечание: важно обрабатывать ошибки именно здесь, а не в блоке catch(),
-                // чтобы не перехватывать исключения из ошибок в самих компонентах.
                 (error) => {
                     console.log(error);
                 }
@@ -53,10 +70,9 @@ class Form extends React.Component {
 
         for (let i = 1; i <= this.state.countInputs; i++) {
             inputs.push(
-                <div>
+                <div key={`phone_${i}`}>
                     <p>phone:</p>
-                    <input name={`phone-${i}`} />
-                    {/*onChange={this.handlePhone}*/}
+                    <input name={`phone-${i}`} onChange={this.handlePhone} />
                 </div>
             )
         }
@@ -69,7 +85,7 @@ class Form extends React.Component {
                     <input type="text" name="lastName" value={this.state.lastName} onChange={this.handleChange} />
                     {inputs}
                     <br />
-                    <input type="submit" value="Отправить" />
+                    <input type="submit" value="Send" />
                 </form>
                 <button onClick={this.add}>Add phone</button>
             </div>
